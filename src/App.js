@@ -3,6 +3,7 @@ import Clock from './components/Clock';
 import ClockWithoutSeconds from './components/ClockWithoutSeconds';
 import Stopwatch from './components/Stopwatch';
 import Pomodoro from './components/Pomodoro';
+import Loading from './components/Loading';
 import styled, { ThemeProvider, keyframes } from 'styled-components';
 import { FaExpand, FaCompress, FaAngleLeft, FaAngleRight } from 'react-icons/fa';
 
@@ -316,6 +317,7 @@ const App = () => {
   const [visible, setVisible] = useState(true);
   const [showControls, setShowControls] = useState(true);
   const [view, setView] = useState('clock');
+  const [loading, setLoading] = useState(true);
 
   const clockStyles = ['Classic', 'Focus'];
 
@@ -345,6 +347,11 @@ const App = () => {
     document.addEventListener('mousemove', handleActivity);
     document.addEventListener('keydown', handleActivity);
 
+    // Simulate a loading delay
+    const loadingTimeout = setTimeout(() => {
+      setLoading(false);
+    }, 4000); // 4 seconds loading time
+
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
@@ -352,6 +359,8 @@ const App = () => {
       document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
       document.removeEventListener('mousemove', handleActivity);
       document.removeEventListener('keydown', handleActivity);
+      clearTimeout(activityTimeout);
+      clearTimeout(loadingTimeout);
     };
   }, []);
 
@@ -435,6 +444,10 @@ const App = () => {
     }
   };
 
+  if (loading) {
+    return <Loading />;
+  }
+
   return (
     <ThemeProvider theme={darkTheme}>
       <AppContainer>
@@ -471,7 +484,7 @@ const App = () => {
           </IconButton>
         </ControlPanel>
         <Footer>
-          © 2024 DigiTimeHub
+          © 2024 DigiTime Hub
         </Footer>
       </AppContainer>
     </ThemeProvider>
