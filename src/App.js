@@ -6,6 +6,7 @@ import Pomodoro from './components/Pomodoro';
 import Loading from './components/Loading';
 import styled, { ThemeProvider, keyframes } from 'styled-components';
 import { FaExpand, FaCompress, FaAngleLeft, FaAngleRight } from 'react-icons/fa';
+import './App.css';
 
 const darkTheme = {
   background: '#000000',

@@ -35,6 +35,7 @@ const TimeDisplay = styled.div`
   font-size: 8em;
   margin-bottom: 20px;
   font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  animation: ${({ visible }) => (visible ? fadeIn : fadeOut)} 0.5s ease;
 
   @media (max-width: 768px) {
     font-size: 6em;
@@ -220,7 +221,7 @@ const Pomodoro = ({ visible }) => {
           <FaAngleRight />
         </SelectorButton>
       </SelectorWrapper>
-      <TimeDisplay>{formatTime(time)}</TimeDisplay>
+      <TimeDisplay visible={animationVisible}>{formatTime(time)}</TimeDisplay>
       <ButtonContainer>
         <Button onClick={handleStartStop} isStop={running}>{running ? 'Stop' : 'Start'}</Button>
         <Button onClick={handleReset}>Reset</Button>
