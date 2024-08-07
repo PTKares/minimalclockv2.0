@@ -32,16 +32,16 @@ const PomodoroContainer = styled.div`
 `;
 
 const TimeDisplay = styled.div`
-  font-size: 8em; /* Increased size */
+  font-size: 8em;
   margin-bottom: 20px;
   font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  
+
   @media (max-width: 768px) {
-    font-size: 6em; /* Increased size */
+    font-size: 6em;
   }
 
   @media (max-width: 480px) {
-    font-size: 4em; /* Increased size */
+    font-size: 4em;
   }
 `;
 
@@ -50,7 +50,7 @@ const ButtonContainer = styled.div`
   justify-content: center;
   gap: 20px;
   margin-top: 20px;
-  
+
   @media (max-width: 768px) {
     gap: 10px;
   }
@@ -93,6 +93,7 @@ const SelectorWrapper = styled.div`
   padding: 5px 10px;
   border-radius: 20px;
   margin-bottom: 20px;
+  margin-top: -20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
   @media (max-width: 768px) {
