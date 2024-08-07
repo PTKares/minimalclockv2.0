@@ -13,6 +13,28 @@ const darkTheme = {
   shadowHover: 'drop-shadow(0 0 15px rgba(255, 255, 255, 0.5))'
 };
 
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const fadeOut = keyframes`
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+`;
+
 const AppContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -115,6 +137,7 @@ const ClockWrapper = styled.div`
   flex-direction: column;
   align-items: center;
   margin-bottom: 20px;
+  animation: ${({ visible }) => (visible ? fadeIn : fadeOut)} 0.5s ease;
 
   @media (max-width: 768px) {
     margin-bottom: 10px;
@@ -122,28 +145,6 @@ const ClockWrapper = styled.div`
 
   @media (max-width: 480px) {
     margin-bottom: 5px;
-  }
-`;
-
-const fadeIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
-
-const fadeOut = keyframes`
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(10px);
   }
 `;
 
@@ -318,6 +319,7 @@ const App = () => {
   const [showControls, setShowControls] = useState(true);
   const [view, setView] = useState('clock');
   const [loading, setLoading] = useState(true);
+  const [animationVisible, setAnimationVisible] = useState(true);
 
   const clockStyles = ['Classic', 'Focus'];
 
@@ -365,10 +367,10 @@ const App = () => {
   }, []);
 
   const toggleHourFormat = () => {
-    setVisible(false);
+    setAnimationVisible(false);
     setTimeout(() => {
       setIs24HourFormat(!is24HourFormat);
-      setVisible(true);
+      setAnimationVisible(true);
     }, 500); // Tiempo de la transición
   };
 
@@ -399,29 +401,37 @@ const App = () => {
   };
 
   const handlePreviousStyle = () => {
-    setVisible(false);
+    setAnimationVisible(false);
     setTimeout(() => {
       setClockStyleIndex((prevIndex) => (prevIndex === 0 ? clockStyles.length - 1 : prevIndex - 1));
-      setVisible(true);
+      setAnimationVisible(true);
     }, 500); // Tiempo de la transición
   };
 
   const handleNextStyle = () => {
-    setVisible(false);
+    setAnimationVisible(false);
     setTimeout(() => {
       setClockStyleIndex((prevIndex) => (prevIndex === clockStyles.length - 1 ? 0 : prevIndex + 1));
-      setVisible(true);
+      setAnimationVisible(true);
+    }, 500); // Tiempo de la transición
+  };
+
+  const handleViewChange = (newView) => {
+    setAnimationVisible(false);
+    setTimeout(() => {
+      setView(newView);
+      setAnimationVisible(true);
     }, 500); // Tiempo de la transición
   };
 
   const renderClock = () => {
     switch (clockStyles[clockStyleIndex]) {
       case 'Classic':
-        return <Clock is24HourFormat={is24HourFormat} visible={visible} />;
+        return <Clock is24HourFormat={is24HourFormat} visible={animationVisible} />;
       case 'Focus':
-        return <ClockWithoutSeconds is24HourFormat={is24HourFormat} visible={visible} />;
+        return <ClockWithoutSeconds is24HourFormat={is24HourFormat} visible={animationVisible} />;
       default:
-        return <Clock is24HourFormat={is24HourFormat} visible={visible} />;
+        return <Clock is24HourFormat={is24HourFormat} visible={animationVisible} />;
     }
   };
 
@@ -436,9 +446,9 @@ const App = () => {
       case 'clock':
         return renderClock();
       case 'stopwatch':
-        return <Stopwatch visible={visible} />;
+        return <Stopwatch visible={animationVisible} />;
       case 'pomodoro':
-        return <Pomodoro visible={visible} />;
+        return <Pomodoro visible={animationVisible} />;
       default:
         return renderClock();
     }
@@ -452,29 +462,31 @@ const App = () => {
     <ThemeProvider theme={darkTheme}>
       <AppContainer>
         <Navigation>
-          <NavButton onClick={() => setView('clock')}>Clock</NavButton>
-          <NavButton onClick={() => setView('stopwatch')}>Stopwatch</NavButton>
-          <NavButton onClick={() => setView('pomodoro')}>Pomodoro</NavButton>
+          <NavButton onClick={() => handleViewChange('clock')}>Clock</NavButton>
+          <NavButton onClick={() => handleViewChange('stopwatch')}>Stopwatch</NavButton>
+          <NavButton onClick={() => handleViewChange('pomodoro')}>Pomodoro</NavButton>
         </Navigation>
-        <ClockWrapper>
+        <ClockWrapper visible={animationVisible}>
           {renderView()}
         </ClockWrapper>
-        <SelectorContainer visible={showControls && view === 'clock'}>
-          <SelectorText>Select your clock style</SelectorText>
-          <SelectorWrapper>
-            <SelectorButton onClick={handlePreviousStyle}>
-              <FaAngleLeft />
-            </SelectorButton>
-            <SelectorDisplay>{clockStyles[clockStyleIndex]}</SelectorDisplay>
-            <SelectorButton onClick={handleNextStyle}>
-              <FaAngleRight />
-            </SelectorButton>
-          </SelectorWrapper>
-          <FormatSelector>
-            <FormatButton selected={is24HourFormat} onClick={toggleHourFormat}>24H</FormatButton>
-            <FormatButton selected={!is24HourFormat} onClick={toggleHourFormat}>12H</FormatButton>
-          </FormatSelector>
-        </SelectorContainer>
+        {view === 'clock' && (
+          <SelectorContainer visible={showControls}>
+            <SelectorText>Select your clock style</SelectorText>
+            <SelectorWrapper>
+              <SelectorButton onClick={handlePreviousStyle}>
+                <FaAngleLeft />
+              </SelectorButton>
+              <SelectorDisplay>{clockStyles[clockStyleIndex]}</SelectorDisplay>
+              <SelectorButton onClick={handleNextStyle}>
+                <FaAngleRight />
+              </SelectorButton>
+            </SelectorWrapper>
+            <FormatSelector>
+              <FormatButton selected={is24HourFormat} onClick={toggleHourFormat}>24H</FormatButton>
+              <FormatButton selected={!is24HourFormat} onClick={toggleHourFormat}>12H</FormatButton>
+            </FormatSelector>
+          </SelectorContainer>
+        )}
         {!showControls && view === 'clock' && (
           <DateDisplay>{renderDate()}</DateDisplay>
         )}

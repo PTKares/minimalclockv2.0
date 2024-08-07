@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 
-// Animaciones reutilizadas desde App.js
 const fadeIn = keyframes`
   from {
     opacity: 0;
@@ -13,34 +12,40 @@ const fadeIn = keyframes`
   }
 `;
 
-const fadeOut = keyframes`
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-`;
-
 const StopwatchContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  animation: ${({ visible }) => (visible ? fadeIn : fadeOut)} 0.5s ease;
+  animation: ${({ visible }) => (visible ? fadeIn : 'none')} 0.5s ease;
 `;
 
 const TimeDisplay = styled.div`
-  font-size: 6em;
+  font-size: 8em; /* Increased size */
   margin-bottom: 20px;
   font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  
+  @media (max-width: 768px) {
+    font-size: 6em; /* Increased size */
+  }
+
+  @media (max-width: 480px) {
+    font-size: 4em; /* Increased size */
+  }
 `;
 
 const ButtonContainer = styled.div`
   display: flex;
   justify-content: center;
   gap: 20px;
+  margin-top: 20px;
+  
+  @media (max-width: 768px) {
+    gap: 10px;
+  }
+
+  @media (max-width: 480px) {
+    gap: 5px;
+  }
 `;
 
 const Button = styled.button`
@@ -57,30 +62,55 @@ const Button = styled.button`
     filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.5));
     transform: scale(1.1);
   }
+
+  @media (max-width: 768px) {
+    font-size: 1em;
+    padding: 10px 20px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 0.8em;
+    padding: 5px 10px;
+  }
 `;
 
-const LapsContainer = styled.div`
+const LapList = styled.div`
   margin-top: 20px;
   width: 100%;
+  max-width: 400px;
+
+  @media (max-width: 768px) {
+    margin-top: 15px;
+    max-width: 300px;
+  }
+
+  @media (max-width: 480px) {
+    margin-top: 10px;
+    max-width: 200px;
+  }
 `;
 
-const Lap = styled.div`
+const LapItem = styled.div`
   display: flex;
   justify-content: space-between;
-  font-size: 1em;
-  margin: 5px 0;
-  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  color: ${({ isFastest, isSlowest }) => (isFastest ? 'green' : isSlowest ? 'red' : '#ffffff')};
-  border-bottom: 1px solid #ffffff;
-  padding-bottom: 5px;
+  padding: 5px 0;
+  border-bottom: 1px solid #444;
+
+  &:first-child {
+    border-top: 1px solid #444;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.9em;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 0.8em;
+  }
 `;
 
-const LapNumber = styled.div`
-  text-align: left;
-`;
-
-const LapTime = styled.div`
-  text-align: right;
+const LapTime = styled.span`
+  color: ${({ best, worst }) => (best ? 'green' : worst ? 'red' : '#fff')};
 `;
 
 const Stopwatch = ({ visible }) => {
@@ -93,7 +123,7 @@ const Stopwatch = ({ visible }) => {
     if (running) {
       interval = setInterval(() => {
         setTime(prevTime => prevTime + 1);
-      }, 10); // Cambiado a milisegundos
+      }, 10);
     } else if (!running && time !== 0) {
       clearInterval(interval);
     }
@@ -104,27 +134,29 @@ const Stopwatch = ({ visible }) => {
     setRunning(!running);
   };
 
+  const handleReset = () => {
+    setRunning(false);
+    setTime(0);
+    setLaps([]);
+  };
+
   const handleLapReset = () => {
     if (running) {
       setLaps([...laps, time]);
     } else {
-      setTime(0);
-      setLaps([]);
+      handleReset();
     }
   };
 
   const formatTime = (time) => {
-    const getMilliseconds = `00${time % 100}`.slice(-2);
-    const seconds = Math.floor(time / 100);
-    const getSeconds = `0${seconds % 60}`.slice(-2);
-    const minutes = Math.floor(seconds / 60);
-    const getMinutes = `0${minutes % 60}`.slice(-2);
-    const getHours = `0${Math.floor(minutes / 60)}`.slice(-2);
-    return `${getHours}:${getMinutes}:${getSeconds},${getMilliseconds}`;
+    const minutes = Math.floor(time / 6000);
+    const seconds = Math.floor((time % 6000) / 100);
+    const centiseconds = time % 100;
+    return `${minutes < 10 ? `0${minutes}` : minutes}:${seconds < 10 ? `0${seconds}` : seconds},${centiseconds < 10 ? `0${centiseconds}` : centiseconds}`;
   };
 
-  const fastestLap = Math.min(...laps);
-  const slowestLap = Math.max(...laps);
+  const bestLap = Math.min(...laps);
+  const worstLap = Math.max(...laps);
 
   return (
     <StopwatchContainer visible={visible}>
@@ -133,18 +165,16 @@ const Stopwatch = ({ visible }) => {
         <Button onClick={handleStartStop} isStop={running}>{running ? 'Stop' : 'Start'}</Button>
         <Button onClick={handleLapReset}>{running ? 'Lap' : 'Reset'}</Button>
       </ButtonContainer>
-      <LapsContainer>
+      <LapList>
         {laps.map((lap, index) => (
-          <Lap
-            key={index}
-            isFastest={lap === fastestLap}
-            isSlowest={lap === slowestLap}
-          >
-            <LapNumber>Lap {index + 1}</LapNumber>
-            <LapTime>{formatTime(lap)}</LapTime>
-          </Lap>
+          <LapItem key={index}>
+            <span>Lap {index + 1}</span>
+            <LapTime best={lap === bestLap} worst={lap === worstLap}>
+              {formatTime(lap)}
+            </LapTime>
+          </LapItem>
         ))}
-      </LapsContainer>
+      </LapList>
     </StopwatchContainer>
   );
 };

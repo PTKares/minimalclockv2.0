@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
+import { FaAngleLeft, FaAngleRight } from 'react-icons/fa';
 
-// Animaciones reutilizadas desde App.js
 const fadeIn = keyframes`
   from {
     opacity: 0;
@@ -32,9 +32,17 @@ const PomodoroContainer = styled.div`
 `;
 
 const TimeDisplay = styled.div`
-  font-size: 6em;
+  font-size: 8em; /* Increased size */
   margin-bottom: 20px;
   font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  
+  @media (max-width: 768px) {
+    font-size: 6em; /* Increased size */
+  }
+
+  @media (max-width: 480px) {
+    font-size: 4em; /* Increased size */
+  }
 `;
 
 const ButtonContainer = styled.div`
@@ -42,6 +50,14 @@ const ButtonContainer = styled.div`
   justify-content: center;
   gap: 20px;
   margin-top: 20px;
+  
+  @media (max-width: 768px) {
+    gap: 10px;
+  }
+
+  @media (max-width: 480px) {
+    gap: 5px;
+  }
 `;
 
 const Button = styled.button`
@@ -58,54 +74,108 @@ const Button = styled.button`
     filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.5));
     transform: scale(1.1);
   }
+
+  @media (max-width: 768px) {
+    font-size: 1em;
+    padding: 10px 20px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 0.8em;
+    padding: 5px 10px;
+  }
 `;
 
-const SelectorContainer = styled.div`
+const SelectorWrapper = styled.div`
   display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-bottom: 20px; /* Ajuste para mover los botones más arriba */
-  margin-top: -80px; /* Ajuste para mover los botones más arriba */
+  align-items: center;
+  background-color: ${({ theme }) => theme.background};
+  padding: 5px 10px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  @media (max-width: 768px) {
+    padding: 3px 6px;
+    margin-bottom: 10px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 2px 4px;
+    margin-bottom: 5px;
+  }
 `;
 
-const SelectorButton = styled(Button)`
-  background: gray;
+const SelectorButton = styled.button`
+  background: none;
+  border: none;
+  color: ${({ theme }) => theme.text};
+  cursor: pointer;
+  font-size: 1.5em;
+  transition: filter 0.3s ease, transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  &:hover {
+    filter: ${({ theme }) => theme.shadowHover};
+    transform: scale(1.1);
+  }
+
+  @media (max-width: 768px) {
+    font-size: 1em;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 0.8em;
+  }
+`;
+
+const SelectorDisplay = styled.div`
   font-size: 1em;
-  padding: 10px 20px;
-  background-color: ${({ active }) => (active ? 'rgba(255, 255, 255, 0.2)' : 'gray')};
+  padding: 5px 10px;
+  background-color: ${({ theme }) => theme.background};
+  color: ${({ theme }) => theme.text};
+  border: 1px solid ${({ theme }) => theme.text};
+  border-radius: 20px;
+  text-align: center;
+  min-width: 80px;
+
+  @media (max-width: 768px) {
+    font-size: 0.8em;
+    padding: 3px 6px;
+    min-width: 60px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 0.6em;
+    padding: 2px 4px;
+    min-width: 50px;
+  }
 `;
 
 const Pomodoro = ({ visible }) => {
-  const [time, setTime] = useState(1500); // 25 minutes
+  const [time, setTime] = useState(1500);
   const [running, setRunning] = useState(false);
-  const [mode, setMode] = useState('Pomodoro');
-  const [animating, setAnimating] = useState(false);
+  const [modeIndex, setModeIndex] = useState(0); // 0: Pomodoro, 1: Short Break, 2: Long Break
+  const [animationVisible, setAnimationVisible] = useState(true);
+
+  const modes = ['Pomodoro', 'Short Break', 'Long Break'];
+  const times = [1500, 300, 900]; // 25 min, 5 min, 15 min
 
   useEffect(() => {
     let interval;
-    if (running && time > 0) {
+    if (running) {
       interval = setInterval(() => {
-        setTime(prevTime => prevTime - 1);
+        setTime(prevTime => prevTime > 0 ? prevTime - 1 : 0);
       }, 1000);
     } else if (!running && time !== 0) {
       clearInterval(interval);
     }
-
-    let titleText;
-    if (time === 0) {
-      titleText = "Time's up!";
-    } else {
-      const formattedTime = formatTime(time);
-      if (mode === 'Pomodoro') {
-        titleText = `${formattedTime} - Time to focus!`;
-      } else {
-        titleText = `${formattedTime} - Time for a break!`;
-      }
-    }
-    document.title = titleText;
-
     return () => clearInterval(interval);
-  }, [running, time, mode]);
+  }, [running, time]);
+
+  useEffect(() => {
+    setTime(times[modeIndex]);
+  }, [modeIndex]);
 
   const handleStartStop = () => {
     setRunning(!running);
@@ -113,33 +183,23 @@ const Pomodoro = ({ visible }) => {
 
   const handleReset = () => {
     setRunning(false);
-    setModeTime(mode);
+    setTime(times[modeIndex]);
   };
 
-  const setModeTime = (mode) => {
-    switch (mode) {
-      case 'Pomodoro':
-        setTime(1500);
-        break;
-      case 'Short Break':
-        setTime(300);
-        break;
-      case 'Long Break':
-        setTime(900);
-        break;
-      default:
-        setTime(1500);
-    }
-  };
-
-  const handleModeChange = (newMode) => {
-    setAnimating(true);
-    setRunning(false);
+  const handlePreviousMode = () => {
+    setAnimationVisible(false);
     setTimeout(() => {
-      setMode(newMode);
-      setModeTime(newMode);
-      setAnimating(false);
-    }, 500); // Tiempo de la animación
+      setModeIndex(prevIndex => (prevIndex === 0 ? modes.length - 1 : prevIndex - 1));
+      setAnimationVisible(true);
+    }, 500); // Tiempo de la transición
+  };
+
+  const handleNextMode = () => {
+    setAnimationVisible(false);
+    setTimeout(() => {
+      setModeIndex(prevIndex => (prevIndex === modes.length - 1 ? 0 : prevIndex + 1));
+      setAnimationVisible(true);
+    }, 500); // Tiempo de la transición
   };
 
   const formatTime = (time) => {
@@ -149,12 +209,16 @@ const Pomodoro = ({ visible }) => {
   };
 
   return (
-    <PomodoroContainer visible={!animating}>
-      <SelectorContainer>
-        <SelectorButton onClick={() => handleModeChange('Pomodoro')} active={mode === 'Pomodoro'}>Pomodoro</SelectorButton>
-        <SelectorButton onClick={() => handleModeChange('Short Break')} active={mode === 'Short Break'}>Short Break</SelectorButton>
-        <SelectorButton onClick={() => handleModeChange('Long Break')} active={mode === 'Long Break'}>Long Break</SelectorButton>
-      </SelectorContainer>
+    <PomodoroContainer visible={visible}>
+      <SelectorWrapper>
+        <SelectorButton onClick={handlePreviousMode}>
+          <FaAngleLeft />
+        </SelectorButton>
+        <SelectorDisplay>{modes[modeIndex]}</SelectorDisplay>
+        <SelectorButton onClick={handleNextMode}>
+          <FaAngleRight />
+        </SelectorButton>
+      </SelectorWrapper>
       <TimeDisplay>{formatTime(time)}</TimeDisplay>
       <ButtonContainer>
         <Button onClick={handleStartStop} isStop={running}>{running ? 'Stop' : 'Start'}</Button>
